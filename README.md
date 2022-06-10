@@ -12,7 +12,7 @@ Project is created with:
 
 Set connection string in `appsettings.json` and update database
 
-##License
+## License
 Distributed under the MIT License. See `LICENSE.txt` for more information.
 
 ## Useful links
