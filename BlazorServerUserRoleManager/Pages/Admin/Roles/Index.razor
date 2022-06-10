@@ -1,0 +1,56 @@
+﻿@page "/Administration/Roles"
+@using Microsoft.AspNetCore.Identity
+@using Microsoft.EntityFrameworkCore
+@inject RoleManager<ApplicationRole> RoleManager
+
+<h3>Roles list</h3>
+
+@if (!_loaded)
+{
+    <p>Loading...</p>
+}
+else
+{
+    <a href="Administration/Roles/Create" class="btn btn-primary">Create role</a>
+
+    <table class="table table-hover">
+        <thead>
+        <tr>
+            <th>ID</th>
+            <th>Role name</th>
+            <th>Badge</th>
+            <th colspan="2">Action</th>
+        </tr>
+        </thead>
+
+        <tbody>
+        @foreach (var role in _roles)
+        {
+            <tr>
+                <td>@role.Id</td>
+                <td>@role.Name</td>
+                <td>@role.Badge</td>
+                <td>
+                    <a href=@($"/Administration/Roles/Edit/{role.Id}")>Edit</a>
+                </td>
+                <td>
+                    <a href=@($"/Administration/Roles/Delete/{role.Id}")>Delete</a>
+                </td>
+            </tr>
+        }
+        </tbody>
+    </table>
+}
+
+@code {
+    private bool _loaded;
+
+    private List<ApplicationRole> _roles = null!;
+
+    protected override async Task OnInitializedAsync()
+    {
+        _roles = await RoleManager.Roles.ToListAsync();
+        _loaded = true;
+    }
+
+}

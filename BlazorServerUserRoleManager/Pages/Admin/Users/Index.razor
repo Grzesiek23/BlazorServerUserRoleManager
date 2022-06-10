@@ -1,0 +1,64 @@
+﻿@page "/Administration/Users"
+@using Microsoft.AspNetCore.Identity
+@using Microsoft.EntityFrameworkCore
+@inject UserManager<ApplicationUser> UserManager
+<h3>Users list</h3>
+
+@if (!_loaded)
+{
+    <p>Loading...</p>
+}
+else
+{
+    <a href="Administration/Users/Create" class="btn btn-primary">Create user</a>
+
+    <table class="table table-hover">
+        <thead>
+        <tr>
+            <th>ID</th>
+            <th>FirstName</th>
+            <th>LastName</th>
+            <th>UserName</th>
+            <th>Roles</th>
+            <th colspan="2">Action</th>
+        </tr>
+        </thead>
+
+        <tbody>
+        @foreach (var user in _users)
+        {
+            <tr>
+                <td>@user.Id</td>
+                <td>@user.FirstName</td>
+                <td>@user.LastName</td>
+                <td>@user.UserName</td>
+                <td>@string.Join(", ", user.RolesForUser)</td>
+                <td>
+                    <a href=@($"/Administration/Users/Edit/{user.Id}")>Edit</a>
+
+                </td>
+                <td>
+                    <a href=@($"/Administration/Users/Delete/{user.Id}")>Delete</a>
+                </td>
+            </tr>
+        }
+        </tbody>
+    </table>
+}
+
+@code {
+
+    private bool _loaded;
+    private List<ApplicationUser> _users = null!;
+
+    protected override async Task OnInitializedAsync()
+    {
+        _users = await UserManager.Users.ToListAsync();
+
+        foreach (var user in _users)
+            user.RolesForUser = await UserManager.GetRolesAsync(user);
+
+        _loaded = true;
+    }
+
+}

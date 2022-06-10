@@ -1,0 +1,80 @@
+﻿@page "/Administration/Roles/Create"
+@page "/Administration/Roles/Edit/{Id:guid}"
+@using Microsoft.AspNetCore.Identity
+@inject RoleManager<ApplicationRole> RoleManager
+@inject NavigationManager NavigationManager
+@inject IToastService ToastService
+
+<h3>@(IsNew ? "Create role" : "Edit role")</h3>
+
+@if (!_loaded)
+{
+    <p>Loading...</p>
+}
+else
+{
+    <EditForm Model="_role" OnValidSubmit="HandleSubmit">
+        <FluentValidationValidator></FluentValidationValidator>
+
+        <div class="form-group">
+            <label class="form-label">Role name</label>
+            <InputText @bind-Value="_role.Name" class="form-control"></InputText>
+            <ValidationMessage For="() => _role.Name"></ValidationMessage>
+        </div>
+
+        <div class="form-group">
+            <label class="form-label mt-3">Badge</label>
+            <InputText @bind-Value="_role.Badge" class="form-control"></InputText>
+            <ValidationMessage For="() => _role.Badge"></ValidationMessage>
+        </div>
+
+        <div class="form-group mt-3">
+            <button type="submit" class="btn btn-primary">@(IsNew ? "Create" : "Save")</button>
+            <a href="Administration/Roles" class="btn btn-secondary">Go back to list</a>
+        </div>
+    </EditForm>
+}
+
+@code {
+
+    [Parameter]
+    public Guid Id { get; set; }
+
+    private bool IsNew => Id.ToString() == "00000000-0000-0000-0000-000000000000";
+    private bool _loaded;
+
+    private ApplicationRole _role = new();
+
+    protected override async Task OnInitializedAsync()
+    {
+        if (!IsNew)
+        {
+            _role = await RoleManager.FindByIdAsync(Id.ToString());
+
+            if (_role == null)
+            {
+                ToastService.ShowError("Role not found");
+                return;
+            }
+        }
+
+        _loaded = true;
+    }
+
+    private async Task HandleSubmit()
+    {
+        if (IsNew)
+        {
+            await RoleManager.CreateAsync(_role);
+            ToastService.ShowInfo("Role has been created");
+        }
+        else
+        {
+            await RoleManager.UpdateAsync(_role);
+            ToastService.ShowInfo("Role has been updated");
+        }
+
+        NavigationManager.NavigateTo("Administration/Roles");
+    }
+
+}

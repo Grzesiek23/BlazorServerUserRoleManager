@@ -1,0 +1,208 @@
+﻿@page "/Administration/Users/Create"
+@page "/Administration/Users/Edit/{Id:guid}"
+
+@using Microsoft.AspNetCore.Identity
+@using Microsoft.EntityFrameworkCore
+@inject UserManager<ApplicationUser> UserManager
+@inject RoleManager<ApplicationRole> RoleManager
+@inject NavigationManager NavigationManager
+@inject IToastService ToastService
+
+<h3>@(Create ? "Create user" : "Edit user")</h3>
+
+@if (!_loaded)
+{
+    <p>Loading...</p>
+}
+else
+{
+    <EditForm Model="_user" OnValidSubmit="HandleSubmit">
+        <FluentValidationValidator></FluentValidationValidator>
+
+        <div class="form-group">
+            <label class="form-label">Email address</label>
+            <InputText @bind-Value="_user.Email" class="form-control"></InputText>
+            <ValidationMessage For="() => _user.Email"></ValidationMessage>
+        </div>
+
+        <div class="form-group">
+            <label class="form-label mt-3">UserName</label>
+            <InputText @bind-Value="_user.UserName" class="form-control"></InputText>
+            <ValidationMessage For="() => _user.UserName"></ValidationMessage>
+        </div>
+
+        <div class="form-group">
+            <label class="form-label mt-3">FirstName</label>
+            <InputText @bind-Value="_user.FirstName" class="form-control"></InputText>
+            <ValidationMessage For="() => _user.FirstName"></ValidationMessage>
+        </div>
+
+        <div class="form-group">
+            <label class="form-label mt-3">LastName</label>
+            <InputText @bind-Value="_user.LastName" class="form-control"></InputText>
+            <ValidationMessage For="() => _user.LastName"></ValidationMessage>
+        </div>
+
+        <div class="form-group">
+            <label class="form-label mt-3">Password</label>
+            <InputText @bind-Value="_user.PasswordHash" class="form-control" type="password"></InputText>
+            <ValidationMessage For="() => _user.PasswordHash"></ValidationMessage>
+        </div>
+        <div class="form-group mt-3">
+            <button type="submit" class="btn btn-primary">@(Create ? "Create" : "Save")</button>
+            <a href="Administration/Users" class="btn btn-secondary">Go back to list</a>
+        </div>
+    </EditForm>
+
+    @if (!Create)
+    {
+        <div class="mt-4"></div>
+        <h3>User roles</h3>
+
+        @if (!_loaded)
+        {
+            <p>Loading...</p>
+        }
+        else
+        {
+            <div class="form-group row">
+                <ul class="list-unstyled">
+                    @foreach (var role in _roles)
+                    {
+                        <li class="mt-2 mb-2">
+                            <span class="icheck-primary d-inline">
+                                <input id="@role.Id"
+                                       type="checkbox"
+                                       checked="@_userRolesList.Any(x => x == role.Name)"
+                                       @onchange="() => ManageRole(role.Name)"
+                                       disabled="@_disableProceeding"/>
+                                <label for="@role.Id">@role.Name</label>
+                            </span>
+                        </li>
+                    }
+                </ul>
+            </div>
+        }
+    }
+}
+
+@code {
+
+    [Parameter]
+    public Guid Id { get; set; }
+
+    private bool Create => Id.ToString() == "00000000-0000-0000-0000-000000000000";
+    private bool _loaded;
+    private readonly string _passwordMask = "*********";
+
+    private bool _disableProceeding;
+
+    private ApplicationUser _user = new();
+    private List<ApplicationRole> _roles = null!;
+    private IList<string> _userRolesList = new List<string>();
+
+    protected override async Task OnInitializedAsync()
+    {
+        _loaded = false;
+        if (Create)
+            _user.PasswordHash = string.Empty;
+        else
+        {
+            _user = await UserManager.FindByIdAsync(Id.ToString());
+            
+            if (_user == null)
+            {
+                ToastService.ShowError("User not found");
+                return;
+            }
+            
+            _user.PasswordHash = _passwordMask;
+            _userRolesList = await UserManager.GetRolesAsync(_user);
+        }
+
+        _roles = await RoleManager.Roles.ToListAsync();
+
+        _loaded = true;
+    }
+
+    private async Task HandleSubmit()
+    {
+        if (Create)
+        {
+            var result = await UserManager.CreateAsync(_user, _user.PasswordHash);
+
+            if (result.Succeeded)
+            {
+                ToastService.ShowInfo("User has been created");
+                _user.PasswordHash = _passwordMask;
+                NavigationManager.NavigateTo($"Administration/Users/Edit/{_user.Id}");
+            }
+            else
+            {
+                foreach (var identityError in result.Errors)
+                {
+                    ToastService.ShowError(identityError.Description);
+                }
+                _user.PasswordHash = string.Empty;
+            }
+        }
+        else
+        {
+            var updateResult = await UserManager.UpdateAsync(_user);
+
+            if (!updateResult.Succeeded)
+            {
+                foreach (var updateResultError in updateResult.Errors)
+                {
+                    ToastService.ShowError(updateResultError.Description);
+                }
+                return;
+            }
+
+            if (_user.PasswordHash != _passwordMask)
+            {
+                var token = await UserManager.GeneratePasswordResetTokenAsync(_user);
+                var userPassword = await UserManager.ResetPasswordAsync(_user, token, _user.PasswordHash);
+                if (userPassword.Succeeded)
+                {
+                    ToastService.ShowInfo("User has been update, password has been changed");
+                    NavigationManager.NavigateTo("Administration/Users");
+                    return;
+                }
+
+                foreach (var userPasswordError in userPassword.Errors)
+                {
+                    ToastService.ShowError(userPasswordError.Description);
+                }
+                return;
+            }
+
+            ToastService.ShowInfo("User has been updated without password change");
+            NavigationManager.NavigateTo("Administration/Users");
+        }
+    }
+
+    private async Task ManageRole(string roleName)
+    {
+        if (_disableProceeding)
+            return;
+
+        _disableProceeding = true;
+
+        if (_userRolesList.All(x => x != roleName))
+        {
+            await UserManager.AddToRoleAsync(_user, roleName);
+            ToastService.ShowInfo($"User has been added to role {roleName}");
+        }
+        else
+        {
+            await UserManager.RemoveFromRoleAsync(_user, roleName);
+            ToastService.ShowInfo($"User has been removed from role {roleName}");
+        }
+
+        _userRolesList = await UserManager.GetRolesAsync(_user);
+
+        _disableProceeding = false;
+    }
+
+}

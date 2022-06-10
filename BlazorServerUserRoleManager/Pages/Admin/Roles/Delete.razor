@@ -1,0 +1,60 @@
+﻿@page "/Administration/Roles/Delete/{Id:guid}"
+@using Microsoft.AspNetCore.Identity
+@inject RoleManager<ApplicationRole> RoleManager
+@inject NavigationManager NavigationManager
+@inject IToastService ToastService
+
+<h3>Confirm Delete</h3>
+
+@if (!_loaded)
+{
+    <p>Loading...</p>
+}
+else
+{
+    <p>Are you sure, you want to delete role <b>@_role.Name</b>?</p>
+
+    <button @onclick="DeleteUser" class="btn btn-primary">Yes</button>
+    <a href="Administration/Roles" class="btn btn-secondary">Go back</a>
+}
+
+@code {
+
+    [Parameter]
+    public Guid Id { get; set; }
+
+    private bool _loaded;
+    private ApplicationRole _role = null!;
+
+    protected override async Task OnInitializedAsync()
+    {
+        _role = await RoleManager.FindByIdAsync(Id.ToString());
+        
+        if (_role == null)
+        {
+            ToastService.ShowError("Role not found");
+            return;
+        }
+        
+        _loaded = true;
+    }
+
+    private async Task DeleteUser()
+    {
+        var result = await RoleManager.DeleteAsync(_role);
+        
+        if (result.Succeeded)
+        {
+            ToastService.ShowInfo("Role has been deleted");
+            NavigationManager.NavigateTo("Administration/Roles");
+        }
+        else
+        {
+            foreach (var error in result.Errors)
+            {
+                ToastService.ShowError(error.Description);
+            }
+        }
+    }
+
+}

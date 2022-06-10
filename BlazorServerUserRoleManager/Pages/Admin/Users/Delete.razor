@@ -1,0 +1,60 @@
+﻿@page "/Administration/Users/Delete/{Id:guid}"
+@using Microsoft.AspNetCore.Identity
+@inject UserManager<ApplicationUser> UserManager
+@inject NavigationManager NavigationManager
+@inject IToastService ToastService
+
+<h3>Confirm Delete</h3>
+
+@if (!_loaded)
+{
+    <p>Loading...</p>
+}
+else
+{
+    <p>Are you sure, you want to delete user with email <b>@_user.Email</b>?</p>
+
+    <button @onclick="DeleteUser" class="btn btn-primary">Yes</button>
+    <a href="Administration/Users" class="btn btn-secondary">Go back</a>
+}
+
+@code {
+
+    [Parameter]
+    public Guid Id { get; set; }
+
+    private bool _loaded;
+    private ApplicationUser _user = null!;
+
+    protected override async Task OnInitializedAsync()
+    {
+        _user = await UserManager.FindByIdAsync(Id.ToString());
+
+        if (_user == null)
+        {
+            ToastService.ShowError("User not found");
+            return;
+        }
+
+        _loaded = true;
+    }
+
+    private async Task DeleteUser()
+    {
+        var result = await UserManager.DeleteAsync(_user);
+
+        if (result.Succeeded)
+        {
+            ToastService.ShowInfo("User has been deleted");
+            NavigationManager.NavigateTo("Administration/Users");
+        }
+        else
+        {
+            foreach (var error in result.Errors)
+            {
+                ToastService.ShowError(error.Description);
+            }
+        }
+    }
+
+}
