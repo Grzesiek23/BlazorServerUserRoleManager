@@ -2,6 +2,10 @@
 
 Implementation for user and roles management into Blazor Server application based on ASP.Net Core Identity.
 
+Project include customization for default User and Role Identity:
+* First and last name for user
+* Badge field for role
+
 <img src="images/1.png" alt="UserList">
 
 <img src="images/2.png" alt="UserCreated">
