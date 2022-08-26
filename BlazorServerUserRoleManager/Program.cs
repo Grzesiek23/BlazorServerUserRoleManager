@@ -1,12 +1,11 @@
 using Blazored.Toast;
+using BlazorServerUserRoleManager.Areas.Identity;
+using BlazorServerUserRoleManager.Context;
+using BlazorServerUserRoleManager.Entities;
+using Microsoft.AspNetCore.Authentication.Cookies;
 using Microsoft.AspNetCore.Components.Authorization;
 using Microsoft.AspNetCore.Identity;
 using Microsoft.EntityFrameworkCore;
-using BlazorServerUserRoleManager.Areas.Identity;
-using BlazorServerUserRoleManager.Context;
-using BlazorServerUserRoleManager.Data;
-using BlazorServerUserRoleManager.Entities;
-using Microsoft.AspNetCore.Authentication.Cookies;
 
 var builder = WebApplication.CreateBuilder(args);
 

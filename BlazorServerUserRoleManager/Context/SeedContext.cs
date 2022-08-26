@@ -31,7 +31,7 @@ public static class SeedContext
             if (check == null)
             {
                 await userManager.CreateAsync(user, "P@ssw0rd!");
-                await userManager.AddToRolesAsync(user, new[] {"SuperAdmin", "Admin", "Basic"});
+                await userManager.AddToRolesAsync(user, new[] { "SuperAdmin", "Admin", "Basic" });
             }
         }
     }

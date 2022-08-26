@@ -17,4 +17,6 @@
         <PackageReference Include="Microsoft.EntityFrameworkCore.Tools" Version="6.0.5" />
     </ItemGroup>
 
+    <ProjectExtensions><VisualStudio><UserProperties appsettings_1json__JsonSchema="" /></VisualStudio></ProjectExtensions>
+
 </Project>
