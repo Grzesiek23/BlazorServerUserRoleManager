@@ -44,8 +44,6 @@ builder.Services.AddBlazoredToast();
 
 builder.Services.AddScoped<AuthenticationStateProvider, RevalidatingIdentityAuthenticationStateProvider<ApplicationUser>>();
 
-builder.Services.AddSingleton<WeatherForecastService>();
-
 var app = builder.Build();
 
 // Seed the database.
