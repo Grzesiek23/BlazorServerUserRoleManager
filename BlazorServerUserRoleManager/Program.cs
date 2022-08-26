@@ -53,6 +53,12 @@ using (var scope = app.Services.CreateScope())
     var loggerFactory = services.GetRequiredService<ILoggerFactory>();
     try
     {
+        using (var context = scope.ServiceProvider.GetService<ApplicationDbContext>())
+        {
+            context.Database.EnsureCreated();
+            context.Database.Migrate();
+        }
+
         var userManager = services.GetRequiredService<UserManager<ApplicationUser>>();
         var roleManager = services.GetRequiredService<RoleManager<ApplicationRole>>();
         await SeedContext.SeedRolesAsync(roleManager);
