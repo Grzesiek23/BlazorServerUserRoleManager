@@ -21,6 +21,7 @@ namespace BlazorServerUserRoleManager.Entities
         }
 
         [StringLength(35)] public string? FirstName { get; set; }
+
         [StringLength(35)] public string? LastName { get; set; }
 
         [NotMapped] public IEnumerable<string> RolesForUser { get; set; }

@@ -1,12 +1,11 @@
 using Blazored.Toast;
+using BlazorServerUserRoleManager.Areas.Identity;
+using BlazorServerUserRoleManager.Context;
+using BlazorServerUserRoleManager.Entities;
+using Microsoft.AspNetCore.Authentication.Cookies;
 using Microsoft.AspNetCore.Components.Authorization;
 using Microsoft.AspNetCore.Identity;
 using Microsoft.EntityFrameworkCore;
-using BlazorServerUserRoleManager.Areas.Identity;
-using BlazorServerUserRoleManager.Context;
-using BlazorServerUserRoleManager.Data;
-using BlazorServerUserRoleManager.Entities;
-using Microsoft.AspNetCore.Authentication.Cookies;
 
 var builder = WebApplication.CreateBuilder(args);
 
@@ -44,8 +43,6 @@ builder.Services.AddBlazoredToast();
 
 builder.Services.AddScoped<AuthenticationStateProvider, RevalidatingIdentityAuthenticationStateProvider<ApplicationUser>>();
 
-builder.Services.AddSingleton<WeatherForecastService>();
-
 var app = builder.Build();
 
 // Seed the database.
@@ -55,6 +52,12 @@ using (var scope = app.Services.CreateScope())
     var loggerFactory = services.GetRequiredService<ILoggerFactory>();
     try
     {
+        using (var context = scope.ServiceProvider.GetService<ApplicationDbContext>())
+        {
+            context.Database.EnsureCreated();
+            context.Database.Migrate();
+        }
+
         var userManager = services.GetRequiredService<UserManager<ApplicationUser>>();
         var roleManager = services.GetRequiredService<RoleManager<ApplicationRole>>();
         await SeedContext.SeedRolesAsync(roleManager);
